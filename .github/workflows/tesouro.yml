@@ -5,6 +5,7 @@ on:
 
 jobs:
   scrape:
+
     runs-on: ubuntu-latest
 
     steps:
@@ -12,18 +13,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Listar arquivos
-        run: ls -la
+      - name: Mostrar estrutura
+        run: |
+          pwd
+          ls -R
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
-      - name: Instalar Playwright
+      - name: Testar scraper
         run: |
-          pip install playwright
-          python -m playwright install chromium
-
-      - name: Executar scraper
-        run: python ./scraper.py
+          python ./scraper.py
