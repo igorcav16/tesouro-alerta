@@ -3,6 +3,9 @@ name: Tesouro Direto
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   scrape:
 
