@@ -1,28 +1,39 @@
 import requests
 import json
 
-URL = "https://www.tesourodireto.com.br/json/treasurybondsinfo.json"
+URL = "https://www.tesourodireto.com.br/json-data/resgate"
+
+headers = {
+    "User-Agent": "Mozilla/5.0",
+    "Accept": "application/json"
+}
 
 response = requests.get(
     URL,
-    headers={
-        "User-Agent": "Mozilla/5.0"
-    },
+    headers=headers,
     timeout=60
 )
+
+print("Status:", response.status_code)
+print(response.text[:500])
 
 dados = response.json()
 
 taxa = None
 
-for titulo in dados["response"]["TrsrBdTradgList"]:
+# percorre títulos
+for titulo in dados.get("response", {}).get("TrsrBdTradgList", []):
 
-    nome = titulo["TrsrBd"]["nm"]
+    nome = titulo.get("TrsrBd", {}).get("nm", "")
 
-    # procura Renda+ 2065
-    if "Renda+" in nome and "2065" in nome:
+    if (
+        "Renda+" in nome and
+        "2065" in nome
+    ):
 
-        taxa = titulo["TrsrBd"]["anulInvstmtRate"]
+        taxa = titulo["TrsrBd"].get(
+            "anulInvstmtRate"
+        )
 
         break
 
