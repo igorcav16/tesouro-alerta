@@ -1,72 +1,38 @@
-from playwright.sync_api import sync_playwright
+import requests
 import json
-import re
 
-URL = "https://www.tesourodireto.com.br/titulos/precos-e-taxas.htm"
+URL = "https://www.tesourodireto.com.br/json/treasurybondsinfo.json"
+
+response = requests.get(
+    URL,
+    headers={
+        "User-Agent": "Mozilla/5.0"
+    },
+    timeout=60
+)
+
+dados = response.json()
 
 taxa = None
 
-with sync_playwright() as p:
+for titulo in dados["response"]["TrsrBdTradgList"]:
 
-    browser = p.chromium.launch(
-        headless=True
-    )
+    nome = titulo["TrsrBd"]["nm"]
 
-    page = browser.new_page()
+    # procura Renda+ 2065
+    if "Renda+" in nome and "2065" in nome:
 
-    page.goto(
-        URL,
-        wait_until="domcontentloaded",
-        timeout=60000
-    )
+        taxa = titulo["TrsrBd"]["anulInvstmtRate"]
 
-    page.wait_for_timeout(15000)
+        break
 
-    texto = page.locator("body").inner_text()
-
-    browser.close()
-
-    print("=== TEXTO DA PÁGINA ===")
-    print(texto[:5000])
-
-    linhas = texto.split("\n")
-
-    for linha in linhas:
-
-        linha = linha.strip()
-
-        print(linha)
-
-        # procura taxa diretamente
-        if (
-            "Tesouro Renda+ Aposentadoria Extra 2065"
-            in linha
-        ):
-
-            print("TÍTULO ENCONTRADO")
-
-            match = re.search(
-                r'IPCA\s*\+\s*([0-9,]+)',
-                linha
-            )
-
-            if match:
-
-                taxa = float(
-                    match.group(1)
-                    .replace(",", ".")
-                )
-
-                print("TAXA:", taxa)
-
-                break
-
-# salva mesmo se null
-dados = {
-    "taxa": taxa
-}
+print("Taxa encontrada:", taxa)
 
 with open("taxa.json", "w") as f:
-    json.dump(dados, f)
 
-print("JSON SALVO")
+    json.dump(
+        {
+            "taxa": taxa
+        },
+        f
+    )
