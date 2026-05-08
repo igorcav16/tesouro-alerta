@@ -39,6 +39,8 @@ jobs:
 
           git add taxa.json
 
-          git commit -m "Atualiza taxa" || echo "Nada mudou"
+          git diff --cached --quiet && echo "Nada mudou" && exit 0
 
-          git push
+          git commit -m "Atualiza taxa"
+
+          git push origin main
