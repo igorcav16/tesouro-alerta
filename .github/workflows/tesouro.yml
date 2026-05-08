@@ -11,18 +11,20 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Instalar Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Instalar dependências
         run: |
-          pip install requests beautifulsoup4
+          pip install playwright
+          playwright install chromium
 
-      - name: Executar script
+      - name: Executar scraper
         run: python scraper.py
 
       - name: Commit JSON
