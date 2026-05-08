@@ -1,41 +1,40 @@
 import requests
 import json
+import re
 
-URL = "https://www.tesourodireto.com.br/json-data/resgate"
+API_KEY = "ed50d0e18fd6889bbaec93d575bb015b30756ab8"
 
-headers = {
-    "User-Agent": "Mozilla/5.0",
-    "Accept": "application/json"
-}
+TARGET_URL = "https://www.tesourodireto.com.br/titulos/precos-e-taxas.htm"
 
-response = requests.get(
-    URL,
-    headers=headers,
-    timeout=60
+url = (
+    "https://api.zenrows.com/v1/?"
+    f"apikey={API_KEY}"
+    f"&url={TARGET_URL}"
+    "&js_render=true"
 )
 
-print("Status:", response.status_code)
-print(response.text[:500])
+response = requests.get(url, timeout=120)
 
-dados = response.json()
+html = response.text
+
+print(html[:2000])
 
 taxa = None
 
-# percorre títulos
-for titulo in dados.get("response", {}).get("TrsrBdTradgList", []):
+padrao = r'Tesouro Renda\+ Aposentadoria Extra 2065.*?IPCA \+ ([0-9,]+)%'
 
-    nome = titulo.get("TrsrBd", {}).get("nm", "")
+resultado = re.search(
+    padrao,
+    html,
+    re.S
+)
 
-    if (
-        "Renda+" in nome and
-        "2065" in nome
-    ):
+if resultado:
 
-        taxa = titulo["TrsrBd"].get(
-            "anulInvstmtRate"
-        )
-
-        break
+    taxa = float(
+        resultado.group(1)
+        .replace(",", ".")
+    )
 
 print("Taxa encontrada:", taxa)
 
