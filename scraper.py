@@ -1,65 +1,36 @@
 import requests
 import json
-import re
 
-API_KEY = "ed50d0e18fd6889bbaec93d575bb015b30756ab8"
+URL = "https://www.tesourodireto.com.br/json/treasurybondsinfo.json"
 
-TARGET_URL = "https://www.tesourodireto.com.br/titulos/precos-e-taxas.htm"
+headers = {
+    "User-Agent": "Mozilla/5.0"
+}
 
-url = (
-    "https://api.zenrows.com/v1/?"
-    f"apikey={API_KEY}"
-    f"&url={TARGET_URL}"
-    "&js_render=true"
-    "&wait=15000"
-    "&premium_proxy=true"
-)
+response = requests.get(URL, headers=headers, timeout=60)
 
-response = requests.get(url, timeout=120)
+if response.status_code != 200:
+    print("Erro HTTP:", response.status_code)
+    exit()
 
-html = response.text
-
-print("HTML carregado")
-
-# procura trecho do Renda+
-match_titulo = re.search(
-    r'Tesouro Renda\+ Aposentadoria Extra 2065',
-    html,
-    re.S
-)
+data = response.json()
 
 taxa = None
 
-if match_titulo:
+for item in data.get("response", {}).get("TrsrBdTradgList", []):
 
-    print("Título encontrado")
+    nome = item.get("TrsrBd", {}).get("nm", "")
 
-    inicio = match_titulo.start()
+    vencimento = item.get("TrsrBd", {}).get("mtrtyDtTrgt", "")
 
-    trecho = html[inicio:inicio + 10000]
+    # identifica Renda+ 2065 corretamente
+    if "Renda+" in nome and "2065" in nome:
 
-    print(trecho)
+        taxa = item["TrsrBd"].get("anulInvstmtRate")
 
-    taxa_match = re.search(
-        r'IPCA\s*\+\s*([0-9,]+)',
-        trecho,
-        re.S
-    )
-
-    if taxa_match:
-
-        taxa = float(
-            taxa_match.group(1)
-            .replace(",", ".")
-        )
+        break
 
 print("Taxa encontrada:", taxa)
 
 with open("taxa.json", "w") as f:
-
-    json.dump(
-        {
-            "taxa": taxa
-        },
-        f
-    )
+    json.dump({"taxa": taxa}, f)
