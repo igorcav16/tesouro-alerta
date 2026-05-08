@@ -14,37 +14,55 @@ with sync_playwright() as p:
 
     page = browser.new_page()
 
-    # abre sem esperar tudo carregar
     page.goto(
         URL,
         wait_until="domcontentloaded",
         timeout=60000
     )
 
-    # espera renderizar javascript
-    page.wait_for_timeout(10000)
+    # espera javascript carregar
+    page.wait_for_timeout(15000)
 
-    html = page.content()
+    texto = page.locator("body").inner_text()
 
     browser.close()
 
-    # procura taxa do Renda+ 2065
-    padrao = r'Renda\+\sAposentadoria\sExtra\s2065.*?IPCA\s*\+\s*([0-9,]+)%'
+    linhas = texto.split("\n")
 
-    resultado = re.search(
-        padrao,
-        html,
-        re.S
-    )
+    encontrou_titulo = False
 
-    if resultado:
+    for linha in linhas:
 
-        taxa = float(
-            resultado.group(1)
-            .replace(",", ".")
-        )
+        linha = linha.strip()
 
-print("Taxa encontrada:", taxa)
+        # procura o título EXATO
+        if "Tesouro Renda+ Aposentadoria Extra 2065" in linha:
+
+            print("Título encontrado")
+
+            encontrou_titulo = True
+
+            continue
+
+        # após encontrar o título
+        # procura a taxa IPCA+
+        if encontrou_titulo:
+
+            match = re.search(
+                r'IPCA\s*\+\s*([0-9,]+)',
+                linha
+            )
+
+            if match:
+
+                taxa = float(
+                    match.group(1)
+                    .replace(",", ".")
+                )
+
+                print("Taxa encontrada:", taxa)
+
+                break
 
 dados = {
     "taxa": taxa
