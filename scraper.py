@@ -2,7 +2,7 @@ import requests
 import json
 import re
 
-API_KEY = "SUA_API_KEY"
+API_KEY = "ed50d0e18fd6889bbaec93d575bb015b30756ab8"
 
 TARGET_URL = "https://www.tesourodireto.com.br/titulos/precos-e-taxas.htm"
 
