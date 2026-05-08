@@ -1,5 +1,6 @@
 from playwright.sync_api import sync_playwright
 import json
+import re
 
 URL = "https://www.tesourodireto.com.br/titulos/precos-e-taxas.htm"
 
@@ -13,46 +14,37 @@ with sync_playwright() as p:
 
     page = browser.new_page()
 
+    # abre sem esperar tudo carregar
     page.goto(
         URL,
-        wait_until="networkidle",
-        timeout=120000
+        wait_until="domcontentloaded",
+        timeout=60000
     )
 
-    page.wait_for_timeout(15000)
+    # espera renderizar javascript
+    page.wait_for_timeout(10000)
 
-    texto = page.inner_text("body")
+    html = page.content()
 
     browser.close()
 
-    linhas = texto.split("\n")
+    # procura taxa do Renda+ 2065
+    padrao = r'Renda\+\sAposentadoria\sExtra\s2065.*?IPCA\s*\+\s*([0-9,]+)%'
 
-    for i, linha in enumerate(linhas):
+    resultado = re.search(
+        padrao,
+        html,
+        re.S
+    )
 
-        if (
-            "Renda+" in linha and
-            "2065" in linha
-        ):
+    if resultado:
 
-            for j in range(i, min(i + 10, len(linhas))):
+        taxa = float(
+            resultado.group(1)
+            .replace(",", ".")
+        )
 
-                trecho = linhas[j]
-
-                if "IPCA +" in trecho:
-
-                    taxa_texto = (
-                        trecho
-                        .split("IPCA +")[1]
-                        .replace("%", "")
-                        .strip()
-                        .replace(",", ".")
-                    )
-
-                    try:
-                        taxa = float(taxa_texto)
-                        break
-                    except:
-                        pass
+print("Taxa encontrada:", taxa)
 
 dados = {
     "taxa": taxa
