@@ -13,16 +13,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Mostrar estrutura
-        run: |
-          pwd
-          ls -R
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Testar scraper
+      - name: Instalar Playwright
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Executar scraper
         run: |
           python ./scraper.py
+
+      - name: Commit JSON
+        run: |
+
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+
+          git add taxa.json
+
+          git commit -m "Atualiza taxa" || echo "Nada mudou"
+
+          git push
