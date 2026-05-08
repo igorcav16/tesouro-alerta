@@ -20,33 +20,30 @@ with sync_playwright() as p:
         timeout=60000
     )
 
-    # espera javascript carregar
     page.wait_for_timeout(15000)
 
     texto = page.locator("body").inner_text()
 
     browser.close()
 
-    linhas = texto.split("\n")
+    print("=== TEXTO DA PÁGINA ===")
+    print(texto[:5000])
 
-    encontrou_titulo = False
+    linhas = texto.split("\n")
 
     for linha in linhas:
 
         linha = linha.strip()
 
-        # procura o título EXATO
-        if "Tesouro Renda+ Aposentadoria Extra 2065" in linha:
+        print(linha)
 
-            print("Título encontrado")
+        # procura taxa diretamente
+        if (
+            "Tesouro Renda+ Aposentadoria Extra 2065"
+            in linha
+        ):
 
-            encontrou_titulo = True
-
-            continue
-
-        # após encontrar o título
-        # procura a taxa IPCA+
-        if encontrou_titulo:
+            print("TÍTULO ENCONTRADO")
 
             match = re.search(
                 r'IPCA\s*\+\s*([0-9,]+)',
@@ -60,13 +57,16 @@ with sync_playwright() as p:
                     .replace(",", ".")
                 )
 
-                print("Taxa encontrada:", taxa)
+                print("TAXA:", taxa)
 
                 break
 
+# salva mesmo se null
 dados = {
     "taxa": taxa
 }
 
 with open("taxa.json", "w") as f:
     json.dump(dados, f)
+
+print("JSON SALVO")
