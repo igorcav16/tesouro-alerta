@@ -33,23 +33,23 @@ jobs:
         run: |
           python ./scraper.py
 
-      - name: Commit JSON (seguro contra conflito)
+      - name: Commit JSON seguro
         run: |
 
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
 
-          # garante estado atualizado sem conflito de merge
-          git fetch origin main
-
+          # garante que estamos na branch atual
           git checkout main
-          git reset --hard origin/main
 
-          # executa alteração
+          # adiciona arquivo sempre
           git add taxa.json
 
-          git diff --cached --quiet && echo "Nada mudou" && exit 0
+          # DEBUG: mostra diferença real
+          echo "=== DIFF ==="
+          git diff --cached || true
 
-          git commit -m "Atualiza taxa"
+          # força commit apenas se necessário
+          git commit -m "Atualiza taxa" || echo "Nada para commitar"
 
           git push origin main
