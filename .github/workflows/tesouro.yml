@@ -3,6 +3,7 @@ name: Tesouro Direto
 on:
   schedule:
     - cron: '0 * * * *'
+
   workflow_dispatch:
 
 permissions:
@@ -25,7 +26,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Instalar dependências
+      - name: Instalar requests
         run: |
           pip install requests
 
@@ -33,23 +34,18 @@ jobs:
         run: |
           python ./scraper.py
 
-      - name: Commit JSON seguro
+            - name: Commit JSON
         run: |
 
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
 
-          # garante que estamos na branch atual
-          git checkout main
-
-          # adiciona arquivo sempre
           git add taxa.json
 
-          # DEBUG: mostra diferença real
-          echo "=== DIFF ==="
-          git diff --cached || true
+          git diff --cached --quiet && echo "Nada mudou" && exit 0
 
-          # força commit apenas se necessário
-          git commit -m "Atualiza taxa" || echo "Nada para commitar"
+          git commit -m "Atualiza taxa"
 
           git push origin main
+
+          git push
